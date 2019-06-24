@@ -1,0 +1,105 @@
+﻿using CoreLocation;
+using Foundation;
+using System.Linq;
+using UIKit;
+
+namespace PresentDemo
+{
+    // The UIApplicationDelegate for the application. This class is responsible for launching the
+    // User Interface of the application, as well as listening (and optionally responding) to application events from iOS.
+    [Register("AppDelegate")]
+    public class AppDelegate : UIApplicationDelegate
+    {
+        // class-level declarations
+
+        public override UIWindow Window
+        {
+            get;
+            set;
+        }
+
+        public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
+        {
+            // Override point for customization after application launch.
+            // If not required for your application you can safely delete this method
+
+            CLLocationManager manager = new CLLocationManager();
+            manager.RequestAlwaysAuthorization();
+
+            return true;
+        }
+
+        public override void OnResignActivation(UIApplication application)
+        {
+            // Invoked when the application is about to move from active to inactive state.
+            // This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message)
+            // or when the user quits the application and it begins the transition to the background state.
+            // Games should use this method to pause the game.
+        }
+
+        public override void DidEnterBackground(UIApplication application)
+        {
+            // Use this method to release shared resources, save user data, invalidate timers and store the application state.
+            // If your application supports background exection this method is called instead of WillTerminate when the user quits.
+        }
+
+        public override void WillEnterForeground(UIApplication application)
+        {
+            if (CLLocationManager.Status == CLAuthorizationStatus.Denied
+                    || CLLocationManager.Status == CLAuthorizationStatus.Restricted
+                    || CLLocationManager.Status == CLAuthorizationStatus.NotDetermined)
+            {
+                var topViewController = GetTopPresented(Window.RootViewController);
+
+                if (topViewController is UINavigationController)
+                {
+                    if (!(((UINavigationController)topViewController).ViewControllers.FirstOrDefault() is LocationServicesVerifyViewController))
+                    {
+                        LocationServicesVerifyViewController controller = (LocationServicesVerifyViewController)UIStoryboard.FromName("Main", null).InstantiateViewController("LocationServicesVerifyViewController");
+                        UINavigationController naviController = new UINavigationController(controller);
+                        topViewController.PresentViewController(naviController, true, null);
+                    }                       
+                }
+                else
+                {
+                    LocationServicesVerifyViewController controller = (LocationServicesVerifyViewController)UIStoryboard.FromName("Main", null).InstantiateViewController("LocationServicesVerifyViewController");
+                    UINavigationController naviController = new UINavigationController(controller);
+                    topViewController.PresentViewController(naviController, true, null);
+                }
+            }
+            else
+            {
+                var topViewController = GetTopPresented(Window.RootViewController);
+
+                if (topViewController is UINavigationController)
+                {
+                    if (((UINavigationController)topViewController).ViewControllers.FirstOrDefault() is LocationServicesVerifyViewController)
+                        topViewController.DismissViewController(true, null);
+                }
+            }
+        }
+        UIViewController GetTopPresented(UIViewController viewController)
+        {
+            if (viewController.PresentedViewController != null)
+            {
+                return GetTopPresented(viewController.PresentedViewController);
+            }
+            else
+            {
+                return viewController;
+            }
+        }
+
+        public override void OnActivated(UIApplication application)
+        {
+            // Restart any tasks that were paused (or not yet started) while the application was inactive.
+            // If the application was previously in the background, optionally refresh the user interface.
+        }
+
+        public override void WillTerminate(UIApplication application)
+        {
+            // Called when the application is about to terminate. Save data, if needed. See also DidEnterBackground.
+        }
+    }
+}
+
